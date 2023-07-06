@@ -18,6 +18,7 @@ namespace SUMS_Agent.Models
         public string Description { get; set; } = null!;
         public long AppId { get; set; }
         public bool IsActive { get; set; }
+        public byte[]? Image { get; set; }
 
         public virtual App App { get; set; } = null!;
         public virtual ICollection<App> Apps { get; set; }

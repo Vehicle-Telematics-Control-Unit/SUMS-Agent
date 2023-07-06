@@ -50,25 +50,41 @@ namespace SUMS_Agent.Controllers
             Tcu tcu = (from _tcu in _tcuContext.Tcus
                             where _tcu.TcuId == tcuId
                             select _tcu).First();
+            
             var features = (from _TcuFeature in _tcuContext.Tcufeatures
                             where _TcuFeature.TcuId == tcuId
-                            join _feature in _tcuContext.Features
-                            on _TcuFeature.FeatureId equals _feature.FeatureId
-                            select _feature).ToList(); 
+                            select _TcuFeature).ToList(); 
+            
             // get the features related to model
             var featuresInfo = (from _modelFeature in _tcuContext.ModelsFeatures
                                 where _modelFeature.ModelId == tcu.ModelId
                                 join _feature in _tcuContext.Features
                                 on _modelFeature.FeatureId equals _feature.FeatureId
+                                join _tcuFeature in features
+                                on _feature.FeatureId equals _tcuFeature.FeatureId into _featuresInfo
+                                from _featureInfo in _featuresInfo.DefaultIfEmpty()
                                 select new JObject
                                 {
                                     new JProperty("id", _feature.FeatureId),
                                     new JProperty("name", _feature.FeatureName),
                                     new JProperty("description", _feature.Description),
-                                    new JProperty("isActive", features.Contains(_feature))
+                                    new JProperty("state", ResolveFeatureState(_featureInfo))
                             }).ToList();
 
             return Ok(featuresInfo);
+        }
+
+        [HttpGet("features/images/{featureId}")]
+        [Authorize(Policy = "MobileOnly")]
+        public IActionResult GetFeatureImage(long featureId)
+        {
+            var featureImage = (from _feature in _tcuContext.Features
+                                where _feature.FeatureId == featureId
+                                select _feature.Image).FirstOrDefault();
+            if (featureImage == null)
+                return NotFound();
+
+            return File(featureImage, "image/jpeg");
         }
 
         [HttpPut("features")]
@@ -119,6 +135,16 @@ namespace SUMS_Agent.Controllers
                 });
             }
 
+            bool isAlreadyInstalled = (from _tcuFeature in _tcuContext.Tcufeatures
+                                       where _tcuFeature.FeatureId == featureId
+                                       && _tcuFeature.TcuId == tcuId
+                                       select _tcuFeature).Any();
+            if (isAlreadyInstalled)
+                return Ok(new
+                {
+                    code = "Feature already installed"
+                });
+
             _tcuContext.Tcufeatures.Add(new Tcufeature
             {
                 FeatureId = (long)featureId,
@@ -167,17 +193,31 @@ namespace SUMS_Agent.Controllers
                               where _tcuFeature.FeatureId == featureId
                               && _tcuFeature.TcuId == tcuId
                               select _tcuFeature).FirstOrDefault();
-            if (tcuFeature != null)
-            {
-                tcuFeature.IsActive = false;
-                _tcuContext.SaveChanges();
-            }
+            if (tcuFeature == null)
+                return NotFound();
+            
+            _tcuContext.Tcufeatures.Remove(tcuFeature);
+            _tcuContext.SaveChanges();
 
             // check if feature is distributed on tcu or not
             return Ok(new
             {
                 code = "Feature will be removed on the next vehicle wake-up"
             });
+        }
+
+        private static FeatureState ResolveFeatureState(Tcufeature? feature)
+        {
+            if (feature == null)
+                return FeatureState.NOT_DOWNLOADED;
+
+            if (feature.IsActive == false)
+                return FeatureState.PENDING_INSTALL;
+
+            if (feature.IsUptoDate == false)
+                return FeatureState.PENDING_UPDATE;
+
+            return FeatureState.INSTALLED;
         }
     }
 }

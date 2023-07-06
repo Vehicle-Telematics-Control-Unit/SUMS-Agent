@@ -25,11 +25,9 @@ namespace SUMS_Agent.Models
         public virtual DbSet<AspNetUserLogin> AspNetUserLogins { get; set; } = null!;
         public virtual DbSet<AspNetUserToken> AspNetUserTokens { get; set; } = null!;
         public virtual DbSet<ConnectionRequest> ConnectionRequests { get; set; } = null!;
-        public virtual DbSet<ContactMethod> ContactMethods { get; set; } = null!;
         public virtual DbSet<Device> Devices { get; set; } = null!;
         public virtual DbSet<DevicesTcu> DevicesTcus { get; set; } = null!;
         public virtual DbSet<Feature> Features { get; set; } = null!;
-        public virtual DbSet<LockRequest> LockRequests { get; set; } = null!;
         public virtual DbSet<Model> Models { get; set; } = null!;
         public virtual DbSet<ModelsFeature> ModelsFeatures { get; set; } = null!;
         public virtual DbSet<Otptoken> Otptokens { get; set; } = null!;
@@ -187,21 +185,6 @@ namespace SUMS_Agent.Models
                     .HasConstraintName("ConnectionRequest_TCU");
             });
 
-            modelBuilder.Entity<ContactMethod>(entity =>
-            {
-                entity.HasKey(e => new { e.Type, e.Value, e.UserId })
-                    .HasName("Contact_methods_pkey");
-
-                entity.Property(e => e.UserId).HasColumnName("UserID");
-
-                entity.Property(e => e.IsPrimary).HasColumnName("isPrimary");
-
-                entity.HasOne(d => d.User)
-                    .WithMany(p => p.ContactMethods)
-                    .HasForeignKey(d => d.UserId)
-                    .HasConstraintName("ContactMethods_AspNetUsers");
-            });
-
             modelBuilder.Entity<Device>(entity =>
             {
                 entity.ToTable("Device");
@@ -258,33 +241,6 @@ namespace SUMS_Agent.Models
                     .HasForeignKey(d => d.AppId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("Features_Apps");
-            });
-
-            modelBuilder.Entity<LockRequest>(entity =>
-            {
-                entity.HasKey(e => new { e.TcuId, e.DeviceId, e.CreationTimeStamp })
-                    .HasName("LockRequests_pkey");
-
-                entity.Property(e => e.DeviceId).HasMaxLength(150);
-
-                entity.Property(e => e.CreationTimeStamp).HasDefaultValueSql("now()");
-
-                entity.HasOne(d => d.Device)
-                    .WithMany(p => p.LockRequests)
-                    .HasForeignKey(d => d.DeviceId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("LockRequest_Device");
-
-                entity.HasOne(d => d.Status)
-                    .WithMany(p => p.LockRequests)
-                    .HasForeignKey(d => d.StatusId)
-                    .HasConstraintName("LockRequest_RequestStatuses");
-
-                entity.HasOne(d => d.Tcu)
-                    .WithMany(p => p.LockRequests)
-                    .HasForeignKey(d => d.TcuId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("LockRequest_TCU");
             });
 
             modelBuilder.Entity<Model>(entity =>
@@ -370,10 +326,6 @@ namespace SUMS_Agent.Models
                     .HasName("TCUFeatures_pkey");
 
                 entity.ToTable("TCUFeatures");
-
-                entity.Property(e => e.IsActive)
-                    .IsRequired()
-                    .HasDefaultValueSql("true");
 
                 entity.HasOne(d => d.Feature)
                     .WithMany(p => p.Tcufeatures)

@@ -10,7 +10,6 @@ namespace SUMS_Agent.Models
             Alerts = new HashSet<Alert>();
             ConnectionRequests = new HashSet<ConnectionRequest>();
             DevicesTcus = new HashSet<DevicesTcu>();
-            LockRequests = new HashSet<LockRequest>();
             Tcufeatures = new HashSet<Tcufeature>();
         }
 
@@ -29,7 +28,6 @@ namespace SUMS_Agent.Models
         public virtual ICollection<Alert> Alerts { get; set; }
         public virtual ICollection<ConnectionRequest> ConnectionRequests { get; set; }
         public virtual ICollection<DevicesTcu> DevicesTcus { get; set; }
-        public virtual ICollection<LockRequest> LockRequests { get; set; }
         public virtual ICollection<Tcufeature> Tcufeatures { get; set; }
     }
 }

@@ -47,10 +47,25 @@ namespace SUMS_Agent.Controllers
                                            where _app.Repo == registryEvent.appName
                                            && _app.Tag == registryEvent.versionTag
                                            select _app).FirstOrDefault();
+
                         if (updatedApp == null)
                             return BadRequest();
+                        
                         updatedApp.LatestUpdate = registryEvent.timeStamp;
+                        
+                        var features = (from _feature in _tcuContext.Features
+                                        where _feature.AppId == updatedApp.AppId
+                                        select _feature.FeatureId).ToList();
+                        
+                        var tcuFeatures = (from _tcuFeature in _tcuContext.Tcufeatures
+                                           where features.Contains(_tcuFeature.FeatureId)
+                                           select _tcuFeature).ToList();
+                        
+                        foreach (var _tcuFeature in tcuFeatures)
+                            _tcuFeature.IsUptoDate = false;
+
                         _tcuContext.SaveChanges();
+
                         return Ok();
                 }
             }

@@ -9,7 +9,6 @@ namespace SUMS_Agent.Models
         {
             ConnectionRequests = new HashSet<ConnectionRequest>();
             DevicesTcus = new HashSet<DevicesTcu>();
-            LockRequests = new HashSet<LockRequest>();
         }
 
         public string DeviceId { get; set; } = null!;
@@ -21,6 +20,5 @@ namespace SUMS_Agent.Models
         public virtual AspNetUser User { get; set; } = null!;
         public virtual ICollection<ConnectionRequest> ConnectionRequests { get; set; }
         public virtual ICollection<DevicesTcu> DevicesTcus { get; set; }
-        public virtual ICollection<LockRequest> LockRequests { get; set; }
     }
 }

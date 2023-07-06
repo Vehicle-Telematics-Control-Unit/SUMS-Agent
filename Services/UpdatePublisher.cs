@@ -36,6 +36,7 @@ namespace SUMS_Agent.Services
                                      select _feature).ToList();
 
             Console.WriteLine("Found " + featuresToPublish.Count.ToString() + " features");
+
             // get TCU's that must send to them publish
             foreach (Feature featureToPublish in featuresToPublish)
             {
